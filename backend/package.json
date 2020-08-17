@@ -1,0 +1,29 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "Projet 6 Backend",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/McFly91/P6_Aubert_Martin.git"
+  },
+  "author": "Martin Aubert",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/McFly91/P6_Aubert_Martin/issues"
+  },
+  "homepage": "https://github.com/McFly91/P6_Aubert_Martin#readme",
+  "dependencies": {
+    "bcrypt": "^5.0.0",
+    "body-parser": "^1.19.0",
+    "express": "^4.17.1",
+    "jsonwebtoken": "^8.5.1",
+    "mongoose": "^5.9.28",
+    "mongoose-unique-validator": "^2.0.3",
+    "multer": "^1.4.2"
+  }
+}
