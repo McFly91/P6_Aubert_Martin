@@ -59,7 +59,7 @@ exports.likeSauce = (req, res, next) => {
                 
                 console.log(sauce, sauce.likes);
                 if (req.body.like === 1) {
-                    likes +=1;
+                    sauce.likes +=1;
                     sauce.usersLiked.push(req.body.userId);
                     console.log(sauce);
                 }
@@ -73,11 +73,13 @@ exports.likeSauce = (req, res, next) => {
                 else if (req.body.like === 0) {
                     if (sauce.usersLiked.includes(req.body.userId)) {
                         sauce.likes -=1;
-                        usersLiked.pop();
+                        sauce.usersLiked.pop();
+                        console.log("Boucle like = 0");
                     }
                     else if (sauce.usersDisliked.includes(req.body.userId)) {
-                        sauces.dislikes -=1;
-                        usersDisliked.pop();
+                        sauce.dislikes -=1;
+                        sauce.usersDisliked.pop();
+                        console.log("Boucle dislike = 0");
                     }
                 }
                 sauce.save()
