@@ -6,7 +6,7 @@ exports.createSauce = (req, res, next) => {
     const sauceObject = JSON.parse(req.body.sauce);
     sauceObject.dislikes = 0;
     sauceObject.likes = 0;
-    //delete sauceObject._id;
+
     const sauce = new Sauce ({
         ...sauceObject,
         imageUrl : `${req.protocol}://${req.get("host")}/images/${req.file.filename}`
@@ -83,7 +83,6 @@ exports.likeSauce = (req, res, next) => {
                     }
                 }
                 sauce.save()
-                    console.log("save OK")
                     .then(() => res.status(201).json({ message : "Like/Dislike mis à jour" }))
                     .catch(error => res.status(400).json({ error }))
             })
