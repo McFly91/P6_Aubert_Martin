@@ -1,5 +1,11 @@
 const http = require('http');
 const app = require('./app');
+//const fs = require("fs");
+
+/*const options = {
+  key: fs.readFileSync ("./certs/certificat.key"),
+  cert: fs.readFileSync ("./certs/certificat.crt")
+};*/
 
 const normalizePort = val => {
   const port = parseInt(val, 10);

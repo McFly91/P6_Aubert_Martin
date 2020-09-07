@@ -2,11 +2,14 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 const path = require("path");
+const helmet = require("helmet");
 
 const sauceRoutes = require("./routes/sauce");
 const userRoutes = require("./routes/user");
 
 const app = express();
+
+app.use(helmet());
 
 mongoose.connect('mongodb+srv://marty:mcfly@cluster0.uaio5.mongodb.net/Cluster0?retryWrites=true&w=majority',
   { useNewUrlParser: true,
