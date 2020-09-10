@@ -31,4 +31,9 @@ app.use("/images", express.static(path.join(__dirname, "images")));
 app.use("/api/sauces", sauceRoutes);
 app.use("/api/auth", userRoutes);
 
+app.all('*', function (req, res) {
+  console.log("Erreur 404 url: " + req.url);
+  res.send("Erreur d'URL");
+});
+
 module.exports = app;
