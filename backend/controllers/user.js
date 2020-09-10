@@ -4,9 +4,6 @@ const jwt = require("jsonwebtoken");
 
 const User = require("../models/user");
 
-//const { check, validationResult } = require('express-validator');
-
-
 exports.signup = (req, res, next) => {
 
     let emailRegex = /([A-Za-z]|[^<>()\[\]\\\/,;:\s@]){3,}\@([A-Za-z]|[^<>()\[\]\\\/,;:\s@]){3,}\.([A-Za-z]|[^<>()\[\]\\\/.,;:\s@]){2,}/;
@@ -38,6 +35,7 @@ exports.login = (req, res, next) => {
     User.findOne({ email : req.body.email })
         .then(
             user => {
+                console.log("Login");
                 if (!user) {
                     return res.status(401).json({error: "Utilisateur non trouvé"});
                 }
