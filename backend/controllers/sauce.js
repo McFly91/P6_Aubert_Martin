@@ -82,25 +82,29 @@ exports.likeSauce = (req, res, next) => {
                     else {
                         sauce.likes +=1;
                         sauce.usersLiked.push(req.body.userId);
-                        console.log(sauce);
                     }
                 }
                 
                 else if (req.body.like === -1) {
+                    if (sauce.usersLiked.includes(req.body.userId)) {
+                        return res.status(400).json({ message : "Impossible d'ajouter plusieurs Dislike" })
+                    }
+                    else {
                     sauce.dislikes +=1;
                     sauce.usersDisliked.push(req.body.userId);
-                    console.log(sauce);
+                    }
                 }
 
                 else if (req.body.like === 0) {
                     if (sauce.usersLiked.includes(req.body.userId)) {
                         sauce.likes -=1;
-                        sauce.usersLiked.pop();
+                        sauce.usersLiked = sauce.usersLiked.filter(item => item !== req.body.userId);
+                        console.log(sauce.usersLiked);
                         console.log("Boucle like = 0");
                     }
                     else if (sauce.usersDisliked.includes(req.body.userId)) {
                         sauce.dislikes -=1;
-                        sauce.usersDisliked.pop();
+                        sauce.usersDisliked = sauce.usersDisliked.filter(item => item !== req.body.userId);
                         console.log("Boucle dislike = 0");
                     }
                 }
