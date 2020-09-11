@@ -76,9 +76,14 @@ exports.likeSauce = (req, res, next) => {
                 
                 console.log(sauce, sauce.likes);
                 if (req.body.like === 1) {
-                    sauce.likes +=1;
-                    sauce.usersLiked.push(req.body.userId);
-                    console.log(sauce);
+                    if (sauce.usersLiked.includes(req.body.userId)) {
+                        return res.status(400).json({ message : "Impossible d'ajouter plusieurs Like" })
+                    }
+                    else {
+                        sauce.likes +=1;
+                        sauce.usersLiked.push(req.body.userId);
+                        console.log(sauce);
+                    }
                 }
                 
                 else if (req.body.like === -1) {

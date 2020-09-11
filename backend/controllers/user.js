@@ -3,6 +3,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
 const User = require("../models/user");
+const { json } = require("body-parser");
 
 exports.signup = (req, res, next) => {
 
@@ -18,16 +19,16 @@ exports.signup = (req, res, next) => {
                     password : hash
                 })
             user.save()
-            .then(() => res.status(201).json({message: "Utilisateur créé" }))
-            .catch(error => res.status(400).json({error}))
+            .then(() => res.status(201).json({ message: "Utilisateur créé" }))
+            .catch(error => res.status(400).json({ error }))
         })
-        .catch(error => res.status(500).json({error}))
+        .catch(error => res.status(500).json({ error }))
     }
     else if (emailRegex.test(req.body.email) === false) {
-        throw new Error("Email incorrect !");
+        return res.status(401).json({ error : "Email incorrect !"})
     }
     else if (passwordRegex.test(req.body.password) === false) {
-        throw new Error("Veuillez entrer un mot de passe contenant au moins 6 caractères dont 1 majuscule, 1 minuscule, 1 chiffre et 1 des caractères spéciaux !");
+        return res.status(401).json({ error : "Veuillez entrer un mot de passe contenant au moins 6 caractères dont 1 majuscule, 1 minuscule, 1 chiffre et 1 des caractères spéciaux !" })
     }
 };
 
@@ -52,7 +53,7 @@ exports.login = (req, res, next) => {
                                     "RANDOM_TOKEN_AVAILABLE",
                                     {expiresIn: "24h"}
                                 )
-                            });
+                            })
                     })
                     .catch(error => res.status(500).json({ error }))
         })
