@@ -32,8 +32,7 @@ app.use("/api/sauces", sauceRoutes);
 app.use("/api/auth", userRoutes);
 
 app.all('*', function (req, res) {
-  console.log("Erreur 404 url: " + req.url);
-  res.send("Erreur d'URL");
+  res.status(404).json({ error : "Erreur d'URL : " + req.url })
 });
 
 module.exports = app;
