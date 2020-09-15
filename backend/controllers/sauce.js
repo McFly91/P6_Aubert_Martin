@@ -2,6 +2,8 @@ const Sauce = require("../models/sauce");
 
 const fs = require("fs");
 
+const jwt = require("jsonwebtoken");
+
 exports.createSauce = (req, res, next) => {
     const sauceObject = JSON.parse(req.body.sauce);
     sauceObject.dislikes = 0;
@@ -39,10 +41,13 @@ exports.modifySauce = (req, res, next) => {
 };
 
 exports.deleteSauce = (req, res, next) => {
+    const token = req.headers.authorization.split(" ")[1];
+    const decodedToken = jwt.verify(token, "RANDOM_TOKEN_AVAILABLE");
+    const userId = decodedToken.userId;
     Sauce.findOne({ _id : req.params.id })
     .then(sauce => {
-        console.log(sauce.userId);
-        if (req.body.userId === sauce.userId) {
+        console.log(userId, sauce.userId);
+        if (userId === sauce.userId) {
             const filename = sauce.imageUrl.split("/images/")[1];
             fs.unlink(`images/${filename}`, () => {
                 Sauce.deleteOne({ _id : req.params.id })
@@ -51,7 +56,7 @@ exports.deleteSauce = (req, res, next) => {
             })
         }   
         else {
-            res.status(404).json({ message : "Sauce non supprimée" })
+            res.status(404).json({ message : "Vous ne pouvez pas supprimer la sauce" })
         }
     })
     .catch(error => res.status(500).json({ error }))
