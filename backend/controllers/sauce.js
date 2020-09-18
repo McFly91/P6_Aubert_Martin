@@ -3,6 +3,7 @@ const Sauce = require("../models/sauce");
 const fs = require("fs");
 
 const jwt = require("jsonwebtoken");
+const { error } = require("console");
 
 exports.createSauce = (req, res, next) => {
     const sauceObject = JSON.parse(req.body.sauce);
@@ -14,27 +15,37 @@ exports.createSauce = (req, res, next) => {
         imageUrl : `${req.protocol}://${req.get("host")}/images/${req.file.filename}`
     });
     sauce.save()
-        .then(() => res.status(201).json({message : "Sauce enregistré"}))
-        .catch(error => res.status(400).json({ error }))
+        .then(() => res.status(201).json({ message : "Sauce enregistrée" }))
+        .catch(() => res.status(400).json({ error : "Erreur dans l'enregistrement, sauce non enregistrée" }))
 };
 
 exports.modifySauce = (req, res, next) => {
+    console.log(res.locals.userId);
     const sauceObject = req.file ?
     {
         ...JSON.parse(req.body.sauce),
         imageUrl : `${req.protocol}://${req.get("host")}/images/${req.file.filename}`
     } : { ...req.body };
 
+
     Sauce.findOne({ _id : req.params.id })
         .then(sauce => {
-            console.log(sauce.userId);
-            if (req.body.userId === sauce.userId) {
+            console.log("res.locals.userId", res.locals.userId, "sauce.userId", sauce.userId);
+            if (res.locals.userId === sauce.userId) {
+
+                if (req.file) {
+                    const filename = sauce.imageUrl.split("/images/")[1];
+                    fs.unlink(`images/${filename}`, () => {
+                        res.status(200).json({ message : "Ancienne image supprimée" })
+                    })
+                }
+
                 Sauce.updateOne({ _id : req.params.id }, { ...sauceObject, _id : req.params.id })
                     .then(() => res.status(200).json({ message : "Sauce modifiée" }))
                     .catch(error => res.status(400).json({ error }))
             }
             else {
-                res.status(404).json({ message : "Sauce non modifiée"})
+                res.status(404).json({ message : "Vous ne pouvez pas modifier une Sauce qui ne vous appartient pas"})
             }
         })
         .catch(error => res.status(500).json({ error }))
@@ -44,6 +55,7 @@ exports.deleteSauce = (req, res, next) => {
     const token = req.headers.authorization.split(" ")[1];
     const decodedToken = jwt.verify(token, "RANDOM_TOKEN_AVAILABLE");
     const userId = decodedToken.userId;
+
     Sauce.findOne({ _id : req.params.id })
     .then(sauce => {
         console.log(userId, sauce.userId);
@@ -56,7 +68,7 @@ exports.deleteSauce = (req, res, next) => {
             })
         }   
         else {
-            res.status(404).json({ message : "Vous ne pouvez pas supprimer la sauce" })
+            res.status(404).json({ message : "Vous ne pouvez pas supprimer cette sauce" })
         }
     })
     .catch(error => res.status(500).json({ error }))

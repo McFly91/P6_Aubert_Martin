@@ -9,6 +9,7 @@ module.exports = (req, res, next) => {
             return res.status(404).json({ error : "User ID non valide" })
         }
         else {
+            res.locals.userId = userId;
             next();
         }
     }
