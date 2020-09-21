@@ -2,9 +2,6 @@ const Sauce = require("../models/sauce");
 
 const fs = require("fs");
 
-const jwt = require("jsonwebtoken");
-const { error } = require("console");
-
 exports.createSauce = (req, res, next) => {
     const sauceObject = JSON.parse(req.body.sauce);
     sauceObject.dislikes = 0;
@@ -42,7 +39,15 @@ exports.modifySauce = (req, res, next) => {
 
                 Sauce.updateOne({ _id : req.params.id }, { ...sauceObject, _id : req.params.id })
                     .then(() => res.status(200).json({ message : "Sauce modifiée" }))
-                    .catch(error => res.status(400).json({ error }))
+                    .catch(error => {
+                        if (req.file) {
+                            const filename = sauce.imageUrl.split("/images/")[1];
+                            fs.unlink(`images/${filename}`, () => {
+                                res.status(400).json({ error : "image supprimée" })
+                            })
+                        }
+                        res.status(400).json({ error })
+                    })
             }
             else {
                 res.status(404).json({ message : "Vous ne pouvez pas modifier une Sauce qui ne vous appartient pas"})
@@ -52,14 +57,9 @@ exports.modifySauce = (req, res, next) => {
 };
 
 exports.deleteSauce = (req, res, next) => {
-    const token = req.headers.authorization.split(" ")[1];
-    const decodedToken = jwt.verify(token, "RANDOM_TOKEN_AVAILABLE");
-    const userId = decodedToken.userId;
-
     Sauce.findOne({ _id : req.params.id })
     .then(sauce => {
-        console.log(userId, sauce.userId);
-        if (userId === sauce.userId) {
+        if (res.locals.userId === sauce.userId) {
             const filename = sauce.imageUrl.split("/images/")[1];
             fs.unlink(`images/${filename}`, () => {
                 Sauce.deleteOne({ _id : req.params.id })
