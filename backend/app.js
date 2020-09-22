@@ -14,8 +14,8 @@ app.use(helmet());
 mongoose.connect('mongodb+srv://marty:mcfly@cluster0.uaio5.mongodb.net/Cluster0?retryWrites=true&w=majority',
   { useNewUrlParser: true,
     useUnifiedTopology: true })
-  .then(() => console.log('Connexion à MongoDB réussie !'))
-  .catch(() => console.log('Connexion à MongoDB échouée !'));
+    .then(() => console.log('Connexion à MongoDB réussie !'))
+    .catch(() => console.log('Connexion à MongoDB échouée !'));
 
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');

@@ -18,16 +18,21 @@ exports.createSauce = (req, res, next) => {
 
 exports.modifySauce = (req, res, next) => {
     console.log(res.locals.userId);
+    if (req.file && req.body.sauce === undefined) {
+        const filename = req.file.filename;
+        fs.unlink(`images/${filename}`, () => {
+            res.status(400).json({ error : "Erreur dans la requête" })
+        })
+    }
+    else {
     const sauceObject = req.file ?
     {
         ...JSON.parse(req.body.sauce),
         imageUrl : `${req.protocol}://${req.get("host")}/images/${req.file.filename}`
-    } : { ...req.body };
-
+    }  : { ...req.body };
 
     Sauce.findOne({ _id : req.params.id })
         .then(sauce => {
-            console.log("res.locals.userId", res.locals.userId, "sauce.userId", sauce.userId);
             if (res.locals.userId === sauce.userId) {
 
                 if (req.file) {
@@ -39,21 +44,14 @@ exports.modifySauce = (req, res, next) => {
 
                 Sauce.updateOne({ _id : req.params.id }, { ...sauceObject, _id : req.params.id })
                     .then(() => res.status(200).json({ message : "Sauce modifiée" }))
-                    .catch(error => {
-                        if (req.file) {
-                            const filename = sauce.imageUrl.split("/images/")[1];
-                            fs.unlink(`images/${filename}`, () => {
-                                res.status(400).json({ error : "image supprimée" })
-                            })
-                        }
-                        res.status(400).json({ error })
-                    })
+                    .catch(error => res.status(400).json({ error }))
             }
             else {
                 res.status(404).json({ message : "Vous ne pouvez pas modifier une Sauce qui ne vous appartient pas"})
             }
         })
         .catch(error => res.status(500).json({ error }))
+    }
 };
 
 exports.deleteSauce = (req, res, next) => {
@@ -116,13 +114,10 @@ exports.likeSauce = (req, res, next) => {
                     if (sauce.usersLiked.includes(req.body.userId)) {
                         sauce.likes -=1;
                         sauce.usersLiked = sauce.usersLiked.filter(item => item !== req.body.userId);
-                        console.log(sauce.usersLiked);
-                        console.log("Boucle like = 0");
                     }
                     else if (sauce.usersDisliked.includes(req.body.userId)) {
                         sauce.dislikes -=1;
                         sauce.usersDisliked = sauce.usersDisliked.filter(item => item !== req.body.userId);
-                        console.log("Boucle dislike = 0");
                     }
                 }
                 sauce.save()
