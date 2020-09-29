@@ -1,5 +1,4 @@
 const Sauce = require("../models/sauce");
-
 const fs = require("fs");
 
 let inputGloabalRegex = /^[^@&"()!_$*€£`+=\/;?#<>]+[A-Za-z]{2,}\ [A-Za-z0-9]{2,}[^@&"()!_$*€£`+=\/;?#<>]+$/;
@@ -76,21 +75,21 @@ exports.modifySauce = (req, res, next) => {
 
 exports.deleteSauce = (req, res, next) => {
     Sauce.findOne({ _id : req.params.id })
-    .then(sauce => {
-        // On vérifie que la sauce appartient à l'user avant de la supprimer
-        if (res.locals.userId === sauce.userId) {
-            const filename = sauce.imageUrl.split("/images/")[1];
-            fs.unlink(`images/${filename}`, () => {
-                Sauce.deleteOne({ _id : req.params.id })
-                    .then(() => res.status(200).json({ message : "Sauce supprimée" }))
-                    .catch(error => res.status(400).json({ error }))
-            })
-        }   
-        else {
-            res.status(404).json({ message : "Vous ne pouvez pas supprimer cette sauce" })
-        }
-    })
-    .catch(error => res.status(500).json({ error }))
+        .then(sauce => {
+            // On vérifie que la sauce appartient à l'user avant de la supprimer
+            if (res.locals.userId === sauce.userId) {
+                const filename = sauce.imageUrl.split("/images/")[1];
+                fs.unlink(`images/${filename}`, () => {
+                    Sauce.deleteOne({ _id : req.params.id })
+                        .then(() => res.status(200).json({ message : "Sauce supprimée" }))
+                        .catch(error => res.status(400).json({ error }))
+                })
+            }   
+            else {
+                res.status(404).json({ message : "Vous ne pouvez pas supprimer cette sauce" })
+            }
+        })
+        .catch(error => res.status(500).json({ error }))
 };
 
 exports.getOneSauce = (req, res, next) => {
