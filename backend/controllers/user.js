@@ -52,38 +52,35 @@ exports.signup = (req, res, next) => {
 };
 
 exports.login = (req, res, next) => {
-
-    let decryptedEmails = [];
-
     User.find()
         .then(
             users => {
                 users.forEach(user => {
-                    let decryptedEmail = cryptr.decrypt(user.email);
-                    decryptedEmails.push(decryptedEmail);
+                    user.email = cryptr.decrypt(user.email)
+                    console.log(user)
                 })
-                if (decryptedEmails.includes(req.body.email) === true) {
-                    bcrypt.compare(req.body.password, users.password)
-                        .then(
-                            valid => {
-                                if (!valid) {
-                                    res.status(401).json({ error : "Email ou mot de passe incorrect" });
-                                }
-                                res.status(200).json({
-                                    userId: users._id,
-                                    token: jwt.sign(
-                                        {userId: users._id},
-                                        "X19l0zgz9HsOxMGq1qK5tdH9",
-                                        {expiresIn: "24h"}
-                                    )
-                                })
-                        })
-                        .catch(error => res.status(500).json({ error }))
+                for (let i = 0; i < users.length; i++) {
+                    console.log(users[i].email, users[i].email.includes(req.body.email))
+                    if(users[i].email.includes(req.body.email) === true) {
+                        bcrypt.compare(req.body.password, users[i].password)
+                            .then(
+                                valid => {
+                                    if (!valid) {
+                                        return res.status(401).json({ error : "Email ou mot de passe incorrect" });
+                                    }
+                                    console.log(valid);
+                                    res.status(200).json({
+                                        userId: users[i]._id,
+                                        token: jwt.sign(
+                                            {userId: users[i]._id},
+                                            "X19l0zgz9HsOxMGq1qK5tdH9",
+                                            {expiresIn: "24h"}
+                                        )
+                                    })
+                            })
+                            .catch(error => res.status(500).json({ error }))
+                    }
                 }
-                else {
-                    return res.status(401).json({ error : "Utilisateur non trouvé" });
-                }
-                console.log(decryptedEmails, req.body.email, decryptedEmails.includes(req.body.email));
             })
         .catch(error => res.status(500).json({ error }))
 };
