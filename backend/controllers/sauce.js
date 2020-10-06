@@ -1,29 +1,30 @@
 const Sauce = require("../models/sauce");
 const fs = require("fs");
 
-let inputGloabalRegex = /^[^@&"()!_$*€£`+=\/;?#<>]+[A-Za-z]{2,}\ [A-Za-z0-9]{2,}[^@&"()!_$*€£`+=\/;?#<>]+$/;
-let inputManufacturerRegex = /^[^@&"()!_$*€£`+=\/;?#<>]+[A-Za-z]{2,}[^@&"()!_$*€£`+=\/;?#<>]+$/;
+const inputGloabalRegex = /^[^@&"()!_$*€£`+=\/;?#<>\s]+[A-Za-z]{2,}\ [A-Za-z0-9]{2,}/;
+const inputManufacturerRegex = /^[^@&"()!_$*€£`+=\/;?#<>]+[A-Za-z]{2,}/;
 
 exports.createSauce = (req, res, next) => {
+    console.log(req.body);
     const sauceObject = JSON.parse(req.body.sauce);
     sauceObject.dislikes = 0;
     sauceObject.likes = 0;
 
     const filename = req.file.filename;
-
+    console.log(sauceObject);
     const sauce = new Sauce ({
         ...sauceObject,
         imageUrl : `${req.protocol}://${req.get("host")}/images/${filename}`
     });
     // On vérifie les données pour la création d'une sauce avec la Regex avant de la sauvegardée
-    if (inputGloabalRegex.test(sauce.name && sauce.description && sauce.mainPepper) === true && inputManufacturerRegex.test(sauce.manufacturer) === true) {
+    if (inputGloabalRegex.test(sauce.name && sauce.description && sauce.mainPepper) === true && inputManufacturerRegex.test(sauce.manufacturer) === true && sauce.heat >= 1 && sauce.heat <= 10) {
         sauce.save()
             .then(() => res.status(201).json({ message : "Sauce enregistrée" }))
             .catch(() => res.status(400).json({ error : "Erreur dans l'enregistrement, sauce non enregistrée" }))
     }
     // Si les conditions ne sont pas remplies, on supprime l'image envoyée
     else {
-        fs.unlink(`images/${filename}`, () => {
+        return fs.unlink(`images/${filename}`, () => {
             res.status(400).json({ error : "Erreur dans l'entrée des données, veuillez rentrer des informations pertinantes" })
         })
     }
@@ -34,7 +35,7 @@ exports.modifySauce = (req, res, next) => {
     if (req.file && req.body.sauce === undefined) {
         const filename = req.file.filename;
         fs.unlink(`images/${filename}`, () => {
-            res.status(400).json({ error : "Erreur dans la requête 'req.body.sauce'" })
+            res.status(400).json({ error : "Erreur dans la requête req.body.sauce" })
         })
     }
     else {
@@ -48,25 +49,31 @@ exports.modifySauce = (req, res, next) => {
             .then(sauce => {
                 // On vérifie que la sauce appartient à l'user avant de la modifier
                 if (res.locals.userId === sauce.userId) {
-                    // On vérifie si il y a une nouvelle image et si oui on supprime l'ancienne
-                    if (req.file) {
-                        const filename = sauce.imageUrl.split("/images/")[1];
-                        fs.unlink(`images/${filename}`, () => {
-                            res.status(200).json({ message : "Ancienne image supprimée" })
-                        })
-                    }
+
                     // On vérifie les données modifiées avec la Regex puis on envoie les modifications
-                    if (inputGloabalRegex.test(sauce.name && sauce.description && sauce.mainPepper) === true && inputManufacturerRegex.test(sauce.manufacturer) === true) {
+                    console.log(inputGloabalRegex.test(sauce.name), inputGloabalRegex.test(sauce.description), inputGloabalRegex.test(sauce.mainPepper), inputManufacturerRegex.test(sauce.manufacturer));
+                    console.log("test 2", inputGloabalRegex.test(sauce.name && sauce.description && sauce.mainPepper))
+                    if (inputGloabalRegex.test(sauce.name && sauce.description && sauce.mainPepper) === true && inputManufacturerRegex.test(sauce.manufacturer) === true  && sauce.heat >= 1 && sauce.heat <= 10) {
+                        // On vérifie si il y a une nouvelle image et si oui on supprime l'ancienne
+                        if (req.file) {
+                            const filename = sauce.imageUrl.split("/images/")[1];
+                            fs.unlink(`images/${filename}`, () => {
+                                res.status(200).json({ message : "Ancienne image supprimée" })
+                            })
+                        }
                         Sauce.updateOne({ _id : req.params.id }, { ...sauceObject, _id : req.params.id })
                             .then(() => res.status(200).json({ message : "Sauce modifiée" }))
                             .catch(error => res.status(400).json({ error }))
                     }
                     else {
-                        res.status(400).json({ error : "Erreur dans l'entrée des données, veuillez rentrer des informations pertinantes" })
+                        const filename = req.file.filename;
+                        fs.unlink(`images/${filename}`, () => {
+                            res.status(400).json({ error : "Erreur dans l'entrée des données, veuillez rentrer des informations pertinantes" })
+                        })
                     }
                 }
                 else {
-                    res.status(404).json({ message : "Vous ne pouvez pas modifier une Sauce qui ne vous appartient pas"})
+                    return res.status(404).json({ message : "Vous ne pouvez pas modifier une Sauce qui ne vous appartient pas"})
                 }
             })
             .catch(error => res.status(500).json({ error }))
@@ -108,6 +115,7 @@ exports.likeSauce = (req, res, next) => {
     Sauce.findOne({ _id : req.params.id })
         .then(
             (sauce) => {
+                console.log(req.body, req.body.sauce)
                 if (req.body.like === 1) {
                     if (sauce.usersLiked.includes(req.body.userId)) {
                         return res.status(400).json({ message : "Impossible d'ajouter plusieurs Like" })
@@ -138,6 +146,11 @@ exports.likeSauce = (req, res, next) => {
                         sauce.usersDisliked = sauce.usersDisliked.filter(item => item !== req.body.userId);
                     }
                 }
+
+                else if (req.body.like === undefined) {
+                    return res.status(400).json({ message : "Le corps de la requête est vide" })
+                }
+                
                 sauce.save()
                     .then(() => res.status(201).json({ message : "Like/Dislike mis à jour" }))
                     .catch(error => res.status(400).json({ error }))
