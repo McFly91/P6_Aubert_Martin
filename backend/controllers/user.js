@@ -1,7 +1,7 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../models/user");
-
+const MaskData = require('maskdata');
 const Cryptr = require("cryptr");
 const cryptr = new Cryptr("secret");
 
@@ -27,10 +27,12 @@ exports.signup = (req, res, next) => {
                             hash => {
                                 const user = new User ({
                                     email : req.body.email,
+                                    emailmasked : MaskData.maskEmail2(req.body.email),
                                     password : hash
                                 })
                             
                             user.email = cryptr.encrypt(user.email);
+
                             user.save()
                             .then(() => res.status(201).json({ message: "Utilisateur créé" }), console.log("user :" + user.email))
                             .catch(error => res.status(400).json({ error }))
