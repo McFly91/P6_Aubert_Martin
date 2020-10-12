@@ -61,10 +61,9 @@ exports.login = (req, res, next) => {
                     user.email = cryptr.decrypt(user.email)
                     console.log(user)
                 })
-                for (let i = 0; i < users.length; i++) {
-                    console.log(users[i].email, users[i].email.includes(req.body.email))
+                for (let i = 0; i < users.length ; i++) {
                     if(users[i].email.includes(req.body.email) === true) {
-                        bcrypt.compare(req.body.password, users[i].password)
+                        return bcrypt.compare(req.body.password, users[i].password)
                             .then(
                                 valid => {
                                     if (!valid) {
@@ -81,6 +80,9 @@ exports.login = (req, res, next) => {
                                     })
                             })
                             .catch(error => res.status(500).json({ error }))
+                    }
+                    else if (i === users.length - 1) {
+                        return res.status(404).json({ error : "Email ou mot de passe incorrect" })
                     }
                 }
             })

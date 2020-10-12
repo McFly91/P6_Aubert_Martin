@@ -1,8 +1,8 @@
 const Sauce = require("../models/sauce");
 const fs = require("fs");
 
-const inputGloabalRegex = /^[^\s@&"()!_$*€£`+=\/;?#<>]+[A-Za-z]{4,}/;
-const inputManufacturerRegex = /^[^\s@&"()!_$*€£`+=\/;?#<>]+[A-Za-z]{2,}/;
+//Regex pour la vérification des données
+const inputRegex = /^[^\s@&"()!_$*€£`+=\/;?#<>]*[A-Za-z]{3,}/;
 
 exports.createSauce = (req, res, next) => {
     console.log(req.body);
@@ -17,8 +17,8 @@ exports.createSauce = (req, res, next) => {
         imageUrl : `${req.protocol}://${req.get("host")}/images/${filename}`
     });
     // On vérifie les données pour la création d'une sauce avec la Regex avant de la sauvegardée
-    console.log(inputGloabalRegex.test(sauce.name), inputGloabalRegex.test(sauce.description), inputGloabalRegex.test(sauce.mainPepper), inputManufacturerRegex.test(sauce.manufacturer));
-    if (inputGloabalRegex.test(sauce.name && sauce.description && sauce.mainPepper) === true && inputManufacturerRegex.test(sauce.manufacturer) === true && sauce.heat >= 1 && sauce.heat <= 10) {
+    console.log(inputRegex.test(sauce.name && sauce.manufacturer && sauce.description && sauce.mainPepper));
+    if (inputRegex.test(sauce.name && sauce.manufacturer && sauce.description && sauce.mainPepper) === true && sauce.heat >= 1 && sauce.heat <= 10) {
         sauce.save()
             .then(() => res.status(201).json({ message : "Sauce enregistrée" }))
             .catch(() => res.status(400).json({ error : "Erreur dans l'enregistrement, sauce non enregistrée" }))
@@ -32,45 +32,47 @@ exports.createSauce = (req, res, next) => {
 };
 
 exports.modifySauce = (req, res, next) => {
-    // Si on transmets juste une image sans les autres informations requises, on renvoie une erreur et on supprime l'image
-    if (req.file && req.body.sauce === undefined) {
-        const filename = req.file.filename;
-        fs.unlink(`images/${filename}`, () => {
-            res.status(400).json({ error : "Erreur dans la requête req.body.sauce" })
-        })
-    }
-    else {
-        const sauceObject = req.file ?
-        {
-            ...JSON.parse(req.body.sauce),
-            imageUrl : `${req.protocol}://${req.get("host")}/images/${req.file.filename}`
-        }  : { ...req.body };
 
         Sauce.findOne({ _id : req.params.id })
             .then(sauce => {
                 // On vérifie que la sauce appartient à l'user avant de la modifier
                 if (res.locals.userId === sauce.userId) {
 
-                    // On vérifie les données modifiées avec la Regex puis on envoie les modifications
-                    console.log(inputGloabalRegex.test(sauce.name), inputGloabalRegex.test(sauce.description), inputGloabalRegex.test(sauce.mainPepper), inputManufacturerRegex.test(sauce.manufacturer));
-                    console.log("test 2", inputGloabalRegex.test(sauce.name && sauce.description && sauce.mainPepper))
-                    if (inputGloabalRegex.test(sauce.name && sauce.description && sauce.mainPepper) === true && inputManufacturerRegex.test(sauce.manufacturer) === true  && sauce.heat >= 1 && sauce.heat <= 10) {
-                        // On vérifie si il y a une nouvelle image et si oui on supprime l'ancienne
-                        if (req.file) {
-                            const filename = sauce.imageUrl.split("/images/")[1];
-                            fs.unlink(`images/${filename}`, () => {
-                                res.status(200).json({ message : "Ancienne image supprimée" })
-                            })
-                        }
-                        Sauce.updateOne({ _id : req.params.id }, { ...sauceObject, _id : req.params.id })
-                            .then(() => res.status(200).json({ message : "Sauce modifiée" }))
-                            .catch(error => res.status(400).json({ error }))
-                    }
-                    else {
+                    // Si on transmets juste une image sans les autres informations requises, on renvoie une erreur et on supprime l'image
+                    if (req.file && req.body.sauce === undefined) {
                         const filename = req.file.filename;
                         fs.unlink(`images/${filename}`, () => {
-                            res.status(400).json({ error : "Erreur dans l'entrée des données, veuillez rentrer des informations pertinantes" })
+                            return res.status(400).json({ error : "Erreur dans la requête req.body.sauce" })
                         })
+                    }
+                    else {
+                        const sauceObject = req.file ?
+                        {
+                            ...JSON.parse(req.body.sauce),
+                            imageUrl : `${req.protocol}://${req.get("host")}/images/${req.file.filename}`
+                        }  : { ...req.body };
+                        console.log(sauceObject, req.body.name);
+                        console.log(inputRegex.test(sauceObject.name));
+                        // On vérifie les données modifiées avec la Reg ex puis on envoie les modifications
+                        if (inputRegex.test(sauceObject.name) && inputRegex.test(sauceObject.manufacturer) && inputRegex.test(sauceObject.description) && inputRegex.test(sauceObject.mainPepper) === true && sauceObject.heat >= 1 && sauceObject.heat <= 10) {
+                            // On vérifie si il y a une nouvelle image et si oui on supprime l'ancienne
+                            if (req.file) {
+                                const filename = sauce.imageUrl.split("/images/")[1];
+                                fs.unlink(`images/${filename}`, () => {
+                                    res.status(200).json({ message : "Ancienne image supprimée" })
+                                })
+                            }
+                            
+                            Sauce.updateOne({ _id : req.params.id }, { ...sauceObject, _id : req.params.id })
+                                .then(() => res.status(200).json({ message : "Sauce modifiée" }))
+                                .catch(error => res.status(400).json({ error }))
+                        }
+                        else {
+                            const filename = req.file.filename;
+                            fs.unlink(`images/${filename}`, () => {
+                                return res.status(400).json({ error : "Erreur dans l'entrée des données, veuillez rentrer des informations pertinantes" })
+                            })
+                        }
                     }
                 }
                 else {
@@ -78,7 +80,6 @@ exports.modifySauce = (req, res, next) => {
                 }
             })
             .catch(error => res.status(500).json({ error }))
-    }
 };
 
 exports.deleteSauce = (req, res, next) => {

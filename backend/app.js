@@ -10,7 +10,7 @@ const app = express();
 
 app.use(helmet());
 
-mongoose.connect('mongodb+srv://marty:mcfly@cluster0.uaio5.mongodb.net/Cluster0?retryWrites=true&w=majority',
+mongoose.connect('mongodb+srv://user_1:CLf60qNiYrto817z@cluster0.uaio5.mongodb.net/Cluster0?retryWrites=true&w=majority',
   { useNewUrlParser: true,
     useUnifiedTopology: true })
     .then(() => console.log('Connexion à MongoDB réussie !'))
