@@ -59,7 +59,6 @@ exports.login = (req, res, next) => {
             users => {
                 users.forEach(user => {
                     user.email = cryptr.decrypt(user.email)
-                    console.log(user)
                 })
                 for (let i = 0; i < users.length ; i++) {
                     if(users[i].email.includes(req.body.email) === true) {
@@ -69,7 +68,6 @@ exports.login = (req, res, next) => {
                                     if (!valid) {
                                         return res.status(401).json({ error : "Email ou mot de passe incorrect" });
                                     }
-                                    console.log(valid);
                                     res.status(200).json({
                                         userId: users[i]._id,
                                         token: jwt.sign(

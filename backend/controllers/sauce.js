@@ -5,20 +5,17 @@ const fs = require("fs");
 const inputRegex = /^[^\s@&"()!_$*€£`+=\/;?#<>]*[A-Za-z]{3,}/;
 
 exports.createSauce = (req, res, next) => {
-    console.log(req.body);
     const sauceObject = JSON.parse(req.body.sauce);
     sauceObject.dislikes = 0;
     sauceObject.likes = 0;
 
     const filename = req.file.filename;
-    console.log(sauceObject);
     const sauce = new Sauce ({
         ...sauceObject,
         imageUrl : `${req.protocol}://${req.get("host")}/images/${filename}`
     });
     // On vérifie les données pour la création d'une sauce avec la Regex avant de la sauvegardée
-    console.log(inputRegex.test(sauce.name && sauce.manufacturer && sauce.description && sauce.mainPepper));
-    if (inputRegex.test(sauce.name && sauce.manufacturer && sauce.description && sauce.mainPepper) === true && sauce.heat >= 1 && sauce.heat <= 10) {
+    if (inputRegex.test(sauceObject.name) && inputRegex.test(sauceObject.manufacturer) && inputRegex.test(sauceObject.description) && inputRegex.test(sauceObject.mainPepper) === true && sauce.heat >= 1 && sauce.heat <= 10) {
         sauce.save()
             .then(() => res.status(201).json({ message : "Sauce enregistrée" }))
             .catch(() => res.status(400).json({ error : "Erreur dans l'enregistrement, sauce non enregistrée" }))
@@ -37,7 +34,6 @@ exports.modifySauce = (req, res, next) => {
             .then(sauce => {
                 // On vérifie que la sauce appartient à l'user avant de la modifier
                 if (res.locals.userId === sauce.userId) {
-
                     // Si on transmets juste une image sans les autres informations requises, on renvoie une erreur et on supprime l'image
                     if (req.file && req.body.sauce === undefined) {
                         const filename = req.file.filename;
@@ -51,26 +47,23 @@ exports.modifySauce = (req, res, next) => {
                             ...JSON.parse(req.body.sauce),
                             imageUrl : `${req.protocol}://${req.get("host")}/images/${req.file.filename}`
                         }  : { ...req.body };
-                        console.log(sauceObject, req.body.name);
-                        console.log(inputRegex.test(sauceObject.name));
                         // On vérifie les données modifiées avec la Reg ex puis on envoie les modifications
                         if (inputRegex.test(sauceObject.name) && inputRegex.test(sauceObject.manufacturer) && inputRegex.test(sauceObject.description) && inputRegex.test(sauceObject.mainPepper) === true && sauceObject.heat >= 1 && sauceObject.heat <= 10) {
                             // On vérifie si il y a une nouvelle image et si oui on supprime l'ancienne
                             if (req.file) {
                                 const filename = sauce.imageUrl.split("/images/")[1];
                                 fs.unlink(`images/${filename}`, () => {
-                                    res.status(200).json({ message : "Ancienne image supprimée" })
+                                    res.status(200)/*.json({ message : "Ancienne image supprimée" })*/
                                 })
                             }
-                            
                             Sauce.updateOne({ _id : req.params.id }, { ...sauceObject, _id : req.params.id })
                                 .then(() => res.status(200).json({ message : "Sauce modifiée" }))
                                 .catch(error => res.status(400).json({ error }))
                         }
                         else {
                             const filename = req.file.filename;
-                            fs.unlink(`images/${filename}`, () => {
-                                return res.status(400).json({ error : "Erreur dans l'entrée des données, veuillez rentrer des informations pertinantes" })
+                            return fs.unlink(`images/${filename}`, () => {
+                                res.status(400).json({ error : "Erreur dans l'entrée des données, veuillez rentrer des informations pertinantes" })
                             })
                         }
                     }
@@ -117,8 +110,11 @@ exports.likeSauce = (req, res, next) => {
     Sauce.findOne({ _id : req.params.id })
         .then(
             (sauce) => {
-                console.log(req.body, req.body.sauce)
-                if (req.body.like === 1) {
+                console.log(req.body)
+                if (req.body.like === undefined || req.body.userId === undefined) {
+                    return res.status(400).json({ message : "Le corps de la requête n'est pas conforme" })
+                }
+                else if (req.body.like === 1) {
                     if (sauce.usersLiked.includes(req.body.userId)) {
                         return res.status(400).json({ message : "Impossible d'ajouter plusieurs Like" })
                     }
@@ -149,9 +145,6 @@ exports.likeSauce = (req, res, next) => {
                     }
                 }
 
-                else if (req.body.like === undefined) {
-                    return res.status(400).json({ message : "Le corps de la requête est vide" })
-                }
                 sauce.save()
                     .then(() => res.status(201).json({ message : "Like/Dislike mis à jour" }))
                     .catch(error => res.status(400).json({ error }))
