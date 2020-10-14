@@ -2,7 +2,8 @@ const Sauce = require("../models/sauce");
 const fs = require("fs");
 
 //Regex pour la vérification des données
-const inputRegex = /^[^\s@&"()!_$*€£`+=\/;?#<>]*[A-Za-z]{3,}/;
+const inputNameRegex = /^[^\s@&"()!_$*€£`+=\/;?#<>]*[A-Za-z]{2,}[^@&()!_$*€£`+=\/;?#<>]*$/;
+const inputRegex = /^[^\s@&"()!_$*€£`+=\/;?#<>]*[A-Za-z0-9]{1,}/;
 
 exports.createSauce = (req, res, next) => {
     const sauceObject = JSON.parse(req.body.sauce);
@@ -15,7 +16,7 @@ exports.createSauce = (req, res, next) => {
         imageUrl : `${req.protocol}://${req.get("host")}/images/${filename}`
     });
     // On vérifie les données pour la création d'une sauce avec la Regex avant de la sauvegardée
-    if (inputRegex.test(sauceObject.name) && inputRegex.test(sauceObject.manufacturer) && inputRegex.test(sauceObject.description) && inputRegex.test(sauceObject.mainPepper) === true && sauce.heat >= 1 && sauce.heat <= 10) {
+    if (inputNameRegex.test(sauceObject.name) && inputRegex.test(sauceObject.manufacturer) && inputRegex.test(sauceObject.description) && inputRegex.test(sauceObject.mainPepper) === true && sauce.heat >= 1 && sauce.heat <= 10) {
         sauce.save()
             .then(() => res.status(201).json({ message : "Sauce enregistrée" }))
             .catch(() => res.status(400).json({ error : "Erreur dans l'enregistrement, sauce non enregistrée" }))
@@ -48,7 +49,7 @@ exports.modifySauce = (req, res, next) => {
                             imageUrl : `${req.protocol}://${req.get("host")}/images/${req.file.filename}`
                         }  : { ...req.body };
                         // On vérifie les données modifiées avec la Reg ex puis on envoie les modifications
-                        if (inputRegex.test(sauceObject.name) && inputRegex.test(sauceObject.manufacturer) && inputRegex.test(sauceObject.description) && inputRegex.test(sauceObject.mainPepper) === true && sauceObject.heat >= 1 && sauceObject.heat <= 10) {
+                        if (inputNameRegex.test(sauceObject.name) && inputRegex.test(sauceObject.manufacturer) && inputRegex.test(sauceObject.description) && inputRegex.test(sauceObject.mainPepper) === true && sauceObject.heat >= 1 && sauceObject.heat <= 10) {
                             // On vérifie si il y a une nouvelle image et si oui on supprime l'ancienne
                             if (req.file) {
                                 const filename = sauce.imageUrl.split("/images/")[1];
