@@ -3,7 +3,7 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/user");
 const MaskData = require('maskdata');
 const Cryptr = require("cryptr");
-const cryptr = new Cryptr("8dGg1LE2n");
+const cryptr = new Cryptr("secret");
 
 exports.signup = (req, res, next) => {
 
@@ -31,7 +31,7 @@ exports.signup = (req, res, next) => {
                                 })
 
                             user.save()
-                            .then(() => res.status(201).json({ message: "Utilisateur créé" }), console.log("user :" + user.email))
+                            .then(() => res.status(201).json({ message: "Utilisateur créé" }))
                             .catch(error => res.status(400).json({ error }))
                         })
                         .catch(error => res.status(500).json({ error }))
