@@ -3,12 +3,12 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/user");
 const MaskData = require('maskdata');
 const Cryptr = require("cryptr");
-const cryptr = new Cryptr("secret");
+const cryptr = new Cryptr("8dGg1LE2n");
 
 exports.signup = (req, res, next) => {
 
-    let emailRegex = /^[^@&"()!_$*€£`+=\/;?#<>]+([A-Za-z]|[^<>()\[\]\\\/,;:\s@]){3,}\@([A-Za-z]|[^<>()\[\]\\\/,;:\s@]){3,}\.([A-Za-z]|[^<>()\[\]\\\/.,;:\s@])[^@&"()!_$*€£`+=\/;?#<>]+$/;
-    let passwordRegex = /(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*])(?=.{6,})/;
+    const emailRegex = /^[^@&"()!_$*€£`+=\/;?#<>]+([A-Za-z]|[^<>()\[\]\\\/,;:\s@]){3,}\@([A-Za-z]|[^<>()\[\]\\\/,;:\s@]){3,}\.([A-Za-z]|[^<>()\[\]\\\/.,;:\s@])[^@&"()!_$*€£`+=\/;?#<>]+$/;
+    const passwordRegex = /(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*])(?=.{6,})/;
     let decryptedEmails = [];
 
     User.find()
@@ -18,7 +18,6 @@ exports.signup = (req, res, next) => {
                     let decryptedEmail = cryptr.decrypt(user.email);
                     decryptedEmails.push(decryptedEmail);
                 })
-            console.log(decryptedEmails);
 
             if (decryptedEmails.includes(req.body.email) === false) {
                 if (emailRegex.test(req.body.email) === true && passwordRegex.test(req.body.password) === true && decryptedEmails.includes(req.body.email) === false) {
@@ -26,12 +25,10 @@ exports.signup = (req, res, next) => {
                         .then(
                             hash => {
                                 const user = new User ({
-                                    email : req.body.email,
+                                    email : cryptr.encrypt(req.body.email),
                                     emailmasked : MaskData.maskEmail2(req.body.email),
                                     password : hash
                                 })
-                            
-                            user.email = cryptr.encrypt(user.email);
 
                             user.save()
                             .then(() => res.status(201).json({ message: "Utilisateur créé" }), console.log("user :" + user.email))
@@ -47,7 +44,7 @@ exports.signup = (req, res, next) => {
                 }
             }
             else {
-                return res.status(400).json({ message : "Veuillez réessayer avec une autre adresse"})
+                return res.status(400).json({ message : "Veuillez réessayer avec une autre adresse email"})
             }
         })
         .catch(error => res.status(500).json({ error }))

@@ -89,7 +89,7 @@ exports.deleteSauce = (req, res, next) => {
                 })
             }   
             else {
-                res.status(404).json({ message : "Vous ne pouvez pas supprimer cette sauce" })
+                res.status(404).json({ message : "Vous ne pouvez pas supprimer une Sauce qui ne vous appartient pas" })
             }
         })
         .catch(error => res.status(500).json({ error }))
@@ -111,7 +111,6 @@ exports.likeSauce = (req, res, next) => {
     Sauce.findOne({ _id : req.params.id })
         .then(
             (sauce) => {
-                console.log(req.body)
                 if (req.body.like === undefined || req.body.userId === undefined) {
                     return res.status(400).json({ message : "Le corps de la requête n'est pas conforme" })
                 }
