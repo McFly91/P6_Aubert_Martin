@@ -3,11 +3,11 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/user");
 const MaskData = require('maskdata');
 const Cryptr = require("cryptr");
-const cryptr = new Cryptr("secret");
+const cryptr = new Cryptr("8dGg1LE2n");
 
 exports.signup = (req, res, next) => {
 
-    const emailRegex = /^[^@&"()!_$*€£`+=\/;?#<>]+([A-Za-z]|[^<>()\[\]\\\/,;:\s@]){3,}\@([A-Za-z]|[^<>()\[\]\\\/,;:\s@]){3,}\.([A-Za-z]|[^<>()\[\]\\\/.,;:\s@])[^@&"()!_$*€£`+=\/;?#<>]+$/;
+    const emailRegex = /^[^\s@&"()!_$*€£`+=\/;?#<>]*([A-Za-z]|[^<>()\[\]\\\/,;:\s@]){3,}\@([A-Za-z]|[^<>()\[\]\\\/,;:\s@]){3,}\.([A-Za-z]|[^<>()\[\]\\\/.,;:\s@])[^@&"()!_$*€£`+=\/;?#<>]+$/;
     const passwordRegex = /(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*])(?=.{6,})/;
     let decryptedEmails = [];
 
